@@ -13,7 +13,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * 相关文档: https://doc.akka.io/docs/akka/current/typed/fsm.html
+ * 相关文档:Behaviors as finite state machines
+ * https://doc.akka.io/docs/akka/current/typed/fsm.html
  */
 public class DiningHakkers {
 
