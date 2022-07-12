@@ -32,6 +32,7 @@ final class WeatherStation extends AbstractBehavior<WeatherStation.Command> {
   // setup for using WeatherStations through Akka Cluster Sharding
   // these could also live elsewhere and the WeatherStation class be completely
   // oblivious to being used in sharding
+  // yl注释:https://doc.akka.io/docs/akka/current/typed/cluster-sharding.html 搜索 "Each Entity type has a key"
   public static final EntityTypeKey<Command> TypeKey =
     EntityTypeKey.create(WeatherStation.Command.class, "WeatherStation");
 

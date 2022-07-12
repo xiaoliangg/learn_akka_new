@@ -37,6 +37,7 @@ public class WeatherRoutes {
   }
 
   private CompletionStage<WeatherStation.DataRecorded> recordData(long wsid, WeatherStation.Data data) {
+    // yl注释:https://doc.akka.io/docs/akka/current/typed/cluster-sharding.html 搜索 "sent via an EntityRef"
     EntityRef<WeatherStation.Command> ref = sharding.entityRefFor(WeatherStation.TypeKey, Long.toString(wsid));
     return ref.ask(replyTo -> new WeatherStation.Record(data, System.currentTimeMillis(), replyTo), timeout);
   }
