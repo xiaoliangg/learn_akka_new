@@ -13,6 +13,6 @@
 		<module>F_akka-samples-fsm-java</module>
         <module>A_HelloWorld</module>
 		<module>akka-sample-cluster-java</module>
-
+		<module>akka-sample-sharding-java</module>
     </modules>
 </project>
