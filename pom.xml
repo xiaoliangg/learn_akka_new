@@ -12,6 +12,7 @@
 	<modules>
 		<module>F_akka-samples-fsm-java</module>
         <module>A_HelloWorld</module>
+		<module>akka-sample-cluster-java</module>
 
     </modules>
 </project>
