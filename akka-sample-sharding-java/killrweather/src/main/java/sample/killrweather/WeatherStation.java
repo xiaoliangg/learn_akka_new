@@ -8,6 +8,7 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import akka.cluster.sharding.typed.ShardingEnvelope;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.Entity;
 import akka.cluster.sharding.typed.javadsl.EntityTypeKey;
@@ -38,11 +39,24 @@ final class WeatherStation extends AbstractBehavior<WeatherStation.Command> {
 
   public static void initSharding(ActorSystem<?> system) {
     ClusterSharding.get(system).init(Entity.of(TypeKey, entityContext ->
-      WeatherStation.create(entityContext.getEntityId())
+            WeatherStation.create(entityContext.getEntityId())
     ));
+
+    // 其他一:使用 ShardingEnvelope 发送消息
+//    ActorRef<ShardingEnvelope<Command>> shardRegion = ClusterSharding.get(system).init(Entity.of(TypeKey, entityContext ->
+//      WeatherStation.create(entityContext.getEntityId())
+//    ));
+//    shardRegion.tell(new ShardingEnvelope<>("34", new WeatherStation.Record(new Data(1L, DataType.DewPoint, 1.0), System.currentTimeMillis(), null)));
+
+    // 其他二:指定角色
+//    ClusterSharding.get(system).init(Entity.of(TypeKey, entityContext ->
+//            WeatherStation.create(entityContext.getEntityId())
+//    ).withRole("backend"));
   }
 
   // actor commands and responses
+  // EntityRef 需要序列化,参考 https://doc.akka.io/docs/akka/current/typed/cluster-sharding.html#a-note-about-entityref-and-serialization
+  // application.conf 有配置 CborSerializable 接口的序列化方式
   interface Command extends CborSerializable {}
 
   public static final class Record implements Command {
