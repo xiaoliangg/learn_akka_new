@@ -15,5 +15,6 @@
 		<module>akka-sample-cluster-java</module>
 		<module>akka-sample-sharding-java</module>
 		<module>G_Persistence_DurableState</module>
+		<module>akka-quickstart-java</module>
     </modules>
 </project>
