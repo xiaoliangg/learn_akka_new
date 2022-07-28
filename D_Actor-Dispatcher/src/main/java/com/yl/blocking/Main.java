@@ -17,7 +17,7 @@ public class Main {
                             for (int i = 0; i < 100; i++) {
                                 //  阻塞Behavior复现
 //                                context.spawn(BlockingActor.create(), "BlockingActor-" + i).tell(i);
-                                // 阻塞Behavior使用转由的调度器
+                                // 阻塞Behavior使用专有的调度器
                                 context.spawn(SeparateDispatcherFutureActor.create(), "BlockingActor-" + i).tell(i);
                                 context.spawn(PrintActor.create(), "PrintActor-" + i).tell(i);
                             }
