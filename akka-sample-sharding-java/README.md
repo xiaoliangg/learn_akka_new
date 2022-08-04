@@ -33,25 +33,27 @@ The [Guardian.java](killrweather/src/main/java/sample/killrweather/Guardian.java
 
 Setting up sharding with the entity is done in [WeatherStation.java](killrweather/src/main/java/sample/killrweather/WeatherStation.java#L38).
 Keeping the setup logic together with the sharded actor and then calling it from the bootstrap logic of the application 
-is a common pattern to structure sharded entities.
+is a common pattern to structure sharded entities(将设置逻辑与切分参与者保持在一起，然后从应用程序的引导逻辑调用它，这是结构化切分实体的常见模式).
 
 ### WeatherStation - sharded data by id
  
-Each sharded `WeatherStation` actor has a set of recorded data points for a station identifier. 
+Each sharded `WeatherStation` actor has a set of recorded data points for a station identifier.   
+每个分片的WeatherStation参与者都有一组用于站点标识符的记录数据点
 
 It receives that data stream from remote devices via the
 HTTP endpoint. Each `WeatherStation` and also respond to queries about it's recorded set of data such as:
+每个WeatherStation也会对其记录的数据集的查询做出回应，例如
 
 * current
 * averages 
 * high/low 
 
-### Receiving edge device data by data type
+### Receiving edge device data by data type  按数据类型接收边缘设备数据
 
 The [WeatherHttpServer](killrweather/src/main/java/sample/killrweather/WeatherHttpServer.java) is started with 
  [WeatherRoutes](killrweather/src/main/java/sample/killrweather/WeatherRoutes.java)
-to receive and unmarshall data from remote devices by station ID to allow 
-querying. To interact with the sharded entities it uses the [`EntityRef` API](killrweather/src/main/java/sample/killrweather/WeatherRoutes.java#L40).
+to receive and unmarshall解编 data from remote devices by station ID to allow 
+querying. To interact with the sharded entities it uses the [`EntityRef` API](killrweather/src/main/java/sample/killrweather/WeatherRoutes.java#L40). 重点:如何向分配实体发送消息？
 
 The HTTP port of each node is chosen from the port used for Akka Remoting plus 10000, so for a node running 
 on port 2525 the HTTP port will be 12525.
@@ -65,18 +67,18 @@ Before running, first make sure the correct settings are set for your system, as
 
 Open [Fog.java](killrweather-fog/src/main/java/sample/killrweather/fog/Fog.java).
 
-`Fog` is the program simulating many weather stations and their devices which read and report data to clusters.
+`Fog` is the program simulating many weather stations天气站点 and their devices which read and report data to clusters.
 The name refers to [Fog computing](https://en.wikipedia.org/wiki/Fog_computing) with edges - the remote weather station
 nodes and their device edges.
 
 This example starts simply with one actor per station and just reports one data type, temperature. In the wild, other devices would include:
-pressure, precipitation, wind speed, wind direction, sky condition and dewpoint.
+pressure, precipitation降水, wind speed, wind direction, sky condition and dewpoint露点.
 `Fog` starts the number of weather stations configured in [killrweather-fog/src/main/resources/application.conf](killrweather-fog/src/main/resources/application.conf) 
 upon boot.
 
 ### Weather stations and devices
 
-Each [WeatherStation](killrweather-fog/src/main/java/sample/killrweather/fog/WeatherStation.java) is run on a task to trigger scheduled data sampling.
+Each [WeatherStation](killrweather-fog/src/main/java/sample/killrweather/fog/WeatherStation.java) is run on a task to trigger scheduled data sampling每个WeatherStation都运行一个任务，以触发预定的数据采样.
 These samples are timestamped and sent to the cluster over HTTP using [Akka HTTP](https://doc.akka.io/docs/akka-http/current/index.html). 
 
 ## Akka HTTP example

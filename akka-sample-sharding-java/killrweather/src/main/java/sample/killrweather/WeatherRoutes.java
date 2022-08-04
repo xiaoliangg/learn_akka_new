@@ -1,5 +1,6 @@
 package sample.killrweather;
 
+import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.cluster.sharding.typed.javadsl.ClusterSharding;
 import akka.cluster.sharding.typed.javadsl.EntityRef;
@@ -9,6 +10,7 @@ import akka.http.javadsl.model.StatusCodes;
 import akka.http.javadsl.server.ExceptionHandler;
 import akka.http.javadsl.server.Route;
 import akka.http.javadsl.unmarshalling.Unmarshaller;
+import akka.japi.function.Function;
 import akka.serialization.jackson.JacksonObjectMapperProvider;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -44,7 +46,13 @@ public class WeatherRoutes {
 
   private CompletionStage<WeatherStation.QueryResult> query(long wsid, WeatherStation.DataType dataType, WeatherStation.Function function) {
     EntityRef<WeatherStation.Command> ref = sharding.entityRefFor(WeatherStation.TypeKey, Long.toString(wsid));
-    return ref.ask(replyTo -> new WeatherStation.Query(dataType, function, replyTo), timeout);
+//    return ref.ask(replyTo -> new WeatherStation.Query(dataType, function, replyTo), timeout);
+    return ref.ask(new Function<ActorRef<WeatherStation.QueryResult>, WeatherStation.Command>() {
+      @Override
+      public WeatherStation.Command apply(ActorRef<WeatherStation.QueryResult> param) throws Exception, Exception {
+        return new WeatherStation.Query(dataType, function, param);
+      }
+    }, timeout);
   }
 
   // unmarshallers for the query parameters
