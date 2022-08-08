@@ -129,6 +129,7 @@ public interface IntroTest {
 
     private HelloWorldMain(ActorContext<SayHello> context) {
       super(context);
+      // yl context是SayHello类型, HelloWorld 及里面的 contenxt 是 Greet 类型
       greeter = context.spawn(HelloWorld.create(), "greeter");
     }
     // #hello-world-main-setup
