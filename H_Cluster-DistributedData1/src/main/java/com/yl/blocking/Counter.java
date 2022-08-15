@@ -80,6 +80,7 @@ public class Counter extends AbstractBehavior<Counter.Command> {
     }
 
     // adapter that turns the response messages from the replicator into our own protocol
+    // yltodo 什么概念？做什么用的？
     private final ReplicatorMessageAdapter<Command, GCounter> replicatorAdapter;
     private final SelfUniqueAddress node;
     private final Key<GCounter> key;
