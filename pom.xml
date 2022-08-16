@@ -12,6 +12,7 @@
 	<modules>
 		<module>F_akka-samples-fsm-java</module>
         <module>A_HelloWorld</module>
+        <module>A_FaultTolerance</module>
         <module>B_Actor-Discovery</module>
         <module>C_Actor-Stash</module>
         <module>D_Actor-Dispatcher</module>
