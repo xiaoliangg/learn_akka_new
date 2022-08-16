@@ -13,6 +13,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.cluster.ddata.*;
 import akka.cluster.ddata.typed.javadsl.DistributedData;
 import akka.cluster.ddata.typed.javadsl.ReplicatorMessageAdapter;
+import sample.distributeddata.yltest.RequestBehavior;
 
 import static akka.cluster.ddata.typed.javadsl.Replicator.*;
 
@@ -28,13 +29,21 @@ public class VotingService {
     INSTANCE
   }
 
-  public static class Votes {
+  public static class Votes implements RequestBehavior.Command {
     public final Map<String, BigInteger> result;
     public final boolean open;
 
     public Votes(Map<String, BigInteger> result, boolean open) {
       this.result = result;
       this.open = open;
+    }
+
+    @Override
+    public String toString() {
+      return "Votes{" +
+              "result=" + result +
+              ", open=" + open +
+              '}';
     }
   }
 
@@ -44,12 +53,33 @@ public class VotingService {
     public Vote(String participant) {
       this.participant = participant;
     }
+
+    @Override
+    public String toString() {
+      return "Vote{" +
+              "participant='" + participant + '\'' +
+              '}';
+    }
   }
 
-  public static class GetVotes implements Command {
-    public final ActorRef<Votes> replyTo;
+  public static class DeleteVote implements Command {
+    public final String participant;
 
-    public GetVotes(ActorRef<Votes> replyTo) {
+    public DeleteVote(String participant) {
+      this.participant = participant;
+    }
+
+    @Override
+    public String toString() {
+      return "Vote{" +
+              "participant='" + participant + '\'' +
+              '}';
+    }
+  }
+  public static class GetVotes implements Command {
+    public ActorRef<RequestBehavior.Command> replyTo;
+
+    public GetVotes(ActorRef<RequestBehavior.Command> replyTo) {
       this.replyTo = replyTo;
     }
   }
@@ -72,11 +102,19 @@ public class VotingService {
     }
   }
 
+  private static class InternalDeleteResponse<A extends ReplicatedData> implements InternalCommand {
+    public final DeleteResponse<A> rsp;
+
+    private InternalDeleteResponse(DeleteResponse<A> rsp) {
+      this.rsp = rsp;
+    }
+  }
+
   private static class InternalGetResponse implements InternalCommand {
-    public final ActorRef<Votes> replyTo;
+    public final ActorRef<RequestBehavior.Command> replyTo;
     public final GetResponse<PNCounterMap<String>> rsp;
 
-    private InternalGetResponse(ActorRef<Votes> replyTo, GetResponse<PNCounterMap<String>> rsp) {
+    private InternalGetResponse(ActorRef<RequestBehavior.Command> replyTo, GetResponse<PNCounterMap<String>> rsp) {
       this.replyTo = replyTo;
       this.rsp = rsp;
     }
@@ -88,7 +126,7 @@ public class VotingService {
 
   private final Key<Flag> openedKey = FlagKey.create("contestOpened");
   private final Key<Flag> closedKey = FlagKey.create("contestClosed");
-  private final Key<PNCounterMap<String>> countersKey = PNCounterMapKey.create("contestCounters");
+  private final Key<PNCounterMap<String>> countersKey = PNCounterMapKey.create("contestCounters2");
   private final WriteConsistency writeAll = new WriteAll(Duration.ofSeconds(5));
   private final ReadConsistency readAll = new ReadAll(Duration.ofSeconds(3));
 
@@ -120,13 +158,20 @@ public class VotingService {
   public Behavior<Command> createBehavior() {
     return Behaviors
       .receive(Command.class)
-      .onMessageEquals(Open.INSTANCE, this::receiveOpen)
+//      .onMessageEquals(Open.INSTANCE, this::receiveOpen)
+            .onMessage(Open.class, this::receiveOpen2)
       .onMessage(InternalSubscribeResponse.class, this::onInternalSubscribeResponse)
       .onMessage(GetVotes.class, this::receiveGetVotesEmpty)
       .build();
   }
 
+  private Behavior<Command> receiveOpen2(Open open) {
+    System.out.println("11111111111111111");
+    return becomeOpen();
+  }
+
   private Behavior<Command> receiveOpen() {
+    System.out.println("22222222222222222222222");
     replicatorFlag.askUpdate(
         askReplyTo -> new Update<>(openedKey, Flag.create(), writeAll, askReplyTo, Flag::switchOn),
         InternalUpdateResponse::new);
@@ -148,7 +193,8 @@ public class VotingService {
     return Behaviors
       .receive(Command.class)
       .onMessage(Vote.class, this::receiveVote)
-      .onMessage(InternalUpdateResponse.class, notUsed -> Behaviors.same()) // ok
+      .onMessage(DeleteVote.class, this::deleteVote)
+      .onMessage(InternalUpdateResponse.class, notUsed -> handleInternalUpdateResponse(notUsed)) // ok
       .onMessageEquals(Close.INSTANCE, this::receiveClose)
       .onMessage(InternalSubscribeResponse.class, this::onInternalSubscribeResponse);
   }
@@ -158,6 +204,21 @@ public class VotingService {
         askReplyTo -> new Update<>(countersKey, PNCounterMap.create(), writeLocal(), askReplyTo,
             curr -> curr.increment(node, vote.participant, 1)),
         InternalUpdateResponse::new);
+
+    return Behaviors.same();
+  }
+
+  private Behavior<Command> deleteVote(DeleteVote vote) {
+    // 把存储所有投票人的key删除了，再次投票时，返回 UpdateDataDeleted(表示:The Replicator.Update couldn't be performed because the entry has been deleted.)
+//    replicatorCounters.askDelete(
+//        askReplyTo -> new Delete<>(countersKey, writeLocal(), askReplyTo),
+//            InternalDeleteResponse::new);
+
+    // 删除某一个投票人的投票数量
+    replicatorCounters.askUpdate(
+            askReplyTo -> new Update<>(countersKey, PNCounterMap.create(), writeLocal(), askReplyTo,
+                    curr -> curr.remove(vote.participant,node)),
+            InternalUpdateResponse::new);
 
     return Behaviors.same();
   }
@@ -189,10 +250,16 @@ public class VotingService {
 
   private Behavior<Command> matchGetVotesImpl(boolean open, BehaviorBuilder<Command> receive) {
     return receive
-      .onMessage(GetVotes.class, this::receiveGetVotes)
-      .onMessage(InternalGetResponse.class, rsp -> onInternalGetResponse(open, rsp))
-      .onMessage(InternalUpdateResponse.class, notUsed -> Behaviors.same())
-      .build();
+            .onMessage(GetVotes.class, this::receiveGetVotes)
+//            .onMessage(DeleteVote.class, this::deleteVote)
+            .onMessage(InternalGetResponse.class, rsp -> onInternalGetResponse(open, rsp))
+            .onMessage(InternalUpdateResponse.class, response -> handleInternalUpdateResponse(response))
+            .build();
+  }
+
+  private Behavior<Command> handleInternalUpdateResponse(InternalUpdateResponse response) {
+    System.out.println("update响应结果: " + response.rsp);
+    return Behaviors.same();
   }
 
   private Behavior<Command> receiveGetVotes(GetVotes getVotes) {

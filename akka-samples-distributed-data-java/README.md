@@ -1,3 +1,16 @@
+## 测试报文
+distributed data 增删改查:
+curl -XPOST http://localhost:12561/test1/0 -H "Content-Type: application/json" --data '{"taskId": "supervisorNull"}'
+curl -XPOST http://localhost:12561/test1/1 -H "Content-Type: application/json" --data '{"taskId": "supervisorNull"}'
+curl -XPOST http://localhost:12561/test1/2 -H "Content-Type: application/json" --data '{"participant": "lawadeal"}'
+curl -XPOST http://localhost:12561/test1/3 -H "Content-Type: application/json" --data '{"participant": "lawadeal"}'
+删除
+curl -XPOST http://localhost:12561/test1/4 -H "Content-Type: application/json" --data '{"participant": "lawadeal"}'
+
+查询当前actor树:
+curl -XPOST http://localhost:12561/test1/5 -H "Content-Type: application/json" --data '{"a": "1"}'
+
+
 This tutorial contains 5 samples illustrating how to use [Akka Distributed Data](https://doc.akka.io/docs/akka/2.6/typed/distributed-data.html).
 
 - Low Latency Voting Service

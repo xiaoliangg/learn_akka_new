@@ -7,4 +7,5 @@ package sample.distributeddata.yltest.entity;
  **/
 public class HttpRequest {
     public String eventTime;
+    public String participant;
 }

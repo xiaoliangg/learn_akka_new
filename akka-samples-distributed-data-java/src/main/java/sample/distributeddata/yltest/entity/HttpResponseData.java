@@ -7,4 +7,18 @@ package sample.distributeddata.yltest.entity;
  **/
 public class HttpResponseData {
     public String eventTime;
+    public String result;
+
+    public HttpResponseData(String eventTime, String result) {
+        this.eventTime = eventTime;
+        this.result = result;
+    }
+
+    @Override
+    public String toString() {
+        return "HttpResponseData{" +
+                "eventTime='" + eventTime + '\'' +
+                ", result='" + result + '\'' +
+                '}';
+    }
 }

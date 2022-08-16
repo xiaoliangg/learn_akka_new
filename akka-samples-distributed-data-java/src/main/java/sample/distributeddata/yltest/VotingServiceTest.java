@@ -3,6 +3,7 @@ package sample.distributeddata.yltest;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.SupervisorStrategy;
 import akka.actor.typed.javadsl.Behaviors;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -26,16 +27,26 @@ public class VotingServiceTest {
                         context -> {
 //                      context.spawn(VotingService.create(), "votingService");
 //                      context.spawn(VotingService.create(), "votingService").tell(new VotingService.Vote( "b"));
-                            ActorRef<VotingService.Command> votingActor =
-                                    context.spawn(VotingService.create(), "votingService");
+//                            ActorRef<RequestBehavior.Command> requestActor =
+//                                    context.spawn(RequestBehavior.create(), "requestBehavior");
+                            ActorRef<RequestBehavior.Command> requestActor =
+                                    context.spawn(Behaviors.supervise(RequestBehavior.create()).onFailure(SupervisorStrategy.restart()), "requestBehavior");
 
-                            HttpRoutes routes = new HttpRoutes(context.getSystem(),votingActor);
+                            ActorRef<VotingService.Command> votingActor =
+                                    context.spawn(VotingService.create(), "votingService2");
+
+                            ActorRef<QueryAllActorsBehavior.Command> queryAllActorsBehavior =
+                                    context.spawn(QueryAllActorsBehavior.create(), "queryAllActorsBehavior");
+
+
+                            HttpRoutes routes = new HttpRoutes(context.getSystem(),votingActor,requestActor,queryAllActorsBehavior);
                             HttpServer.start(routes.test1(), httpPort, context.getSystem());
 
                             return Behaviors.ignore();
 
                         });
         ActorSystem<Void> system = ActorSystem.create(root, "ClusterSystem",config);
+
     }
 
     private static Config configWithPort(int port) {
