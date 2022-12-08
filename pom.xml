@@ -22,6 +22,6 @@
 		<module>G_Persistence_DurableState</module>
 		<module>H_Cluster-DistributedData1</module>
 		<module>akka-quickstart-java</module>
-		<module>J_DeviceTemperatureIOT</module>
+		<module>J_DeviceTemperatureIOT_introduction_part1</module>
     </modules>
 </project>
