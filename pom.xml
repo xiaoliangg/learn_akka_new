@@ -24,5 +24,6 @@
 		<module>akka-quickstart-java</module>
 		<module>J_DeviceTemperatureIOT_introduction_part1</module>
 		<module>J_DeviceTemperatureIOT_part2to5</module>
+		<module>K_akka_http01</module>
     </modules>
 </project>
